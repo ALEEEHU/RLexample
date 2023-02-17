@@ -80,7 +80,7 @@ if __name__ == '__main__':
     env_name  = 'FrozenLake-v0' # 'FrozenLake8x8-v0'
     env = gym.make(env_name)
     gamma = 1.0
-    optimal_v = value_iteration(env, gamma);
+    optimal_v = value_iteration(env, gamma)
     policy = extract_policy(optimal_v, gamma)
     policy_score = evaluate_policy(env, policy, gamma, n=1000)
     print('Policy average score = ', policy_score)

@@ -35,7 +35,7 @@ def extract_policy(v, gamma = 1.0):
         q_sa = np.zeros(env.env.nA)
         for a in range(env.env.nA):
             q_sa[a] = sum([p * (r + gamma * v[s_]) for p, s_, r, _ in  env.env.P[s][a]])
-        policy[s] = np.argmax(q_sa)
+        policy[s] = np.argmax(q_sa) #q函数构造出来以后，做一个argmax，得到一个新的policy，使得这个value function 极大化
     return policy
 
 def compute_policy_v(env, policy, gamma=1.0):
@@ -47,12 +47,12 @@ def compute_policy_v(env, policy, gamma=1.0):
     eps = 1e-10
     while True:
         prev_v = np.copy(v)
-        for s in range(env.env.nS):
+        for s in range(env.env.nS):#迭代的过程
             policy_a = policy[s]
-            v[s] = sum([p * (r + gamma * prev_v[s_]) for p, s_, r, _ in env.env.P[s][policy_a]])
-        if (np.sum((np.fabs(prev_v - v))) <= eps):
+            v[s] = sum([p * (r + gamma * prev_v[s_]) for p, s_, r, _ in env.env.P[s][policy_a]]) #迭代Bellman expectation equation
+        if (np.sum((np.fabs(prev_v - v))) <= eps):#满足收敛条件，不会再更新的时候
             # value converged
-            break
+            break#终止
     return v
 
 def policy_iteration(env, gamma = 1.0):
@@ -61,8 +61,8 @@ def policy_iteration(env, gamma = 1.0):
     max_iterations = 200000
     gamma = 1.0
     for i in range(max_iterations):
-        old_policy_v = compute_policy_v(env, policy, gamma)
-        new_policy = extract_policy(old_policy_v, gamma)
+        old_policy_v = compute_policy_v(env, policy, gamma)#1--given policy , do policy evaluation and get 对于当前的policy的价值函数
+        new_policy = extract_policy(old_policy_v, gamma)#2--policy improvement
         if (np.all(policy == new_policy)):
             print ('Policy-Iteration converged at step %d.' %(i+1))
             break
