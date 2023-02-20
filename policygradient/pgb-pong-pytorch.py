@@ -71,17 +71,17 @@ class PGbaseline(nn.Module):
         self.rewards = []
 
     def forward(self, x):
-        x = F.relu(self.affine1(x))
-        action_scores = self.action_head(x)
-        state_values = self.value_head(x)
-        return F.softmax(action_scores, dim=-1), state_values
+        x = F.relu(self.affine1(x)) # feature是share的
+        action_scores = self.action_head(x) #输出head1——应该采取的策略
+        state_values = self.value_head(x)# 输出head2——实际价值
+        return F.softmax(action_scores, dim=-1), state_values #softmax输出的为概率
 
-    def select_action(self, x):
+    def select_action(self, x):#得到stochastic policy过后会对其进行采样
         x = Variable(torch.from_numpy(x).float().unsqueeze(0))
         if is_cuda: x = x.cuda()
         probs, state_value = self.forward(x)
         m = Categorical(probs)
-        action = m.sample()
+        action = m.sample()#采样来得到action
 
         self.saved_log_probs.append((m.log_prob(action), state_value))
         return action
@@ -123,8 +123,8 @@ def finish_episode():
             pass
         else:
             advantage = advantage.detach()
-        policy_loss.append(- log_prob * advantage)  # policy gradient
-        value_loss.append(F.smooth_l1_loss(value, reward))  # value function approximation
+        policy_loss.append(- log_prob * advantage)  # policy gradient (policy loss)
+        value_loss.append(F.smooth_l1_loss(value, reward))  # value function approximation (value loss)
     optimizer.zero_grad()
     policy_loss = torch.stack(policy_loss).sum()
     value_loss = torch.stack(value_loss).sum()

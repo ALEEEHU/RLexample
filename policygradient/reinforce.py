@@ -9,7 +9,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.distributions import Categorical
 
-
+#reinforce本身方法不稳定，所以引入了baseline使其更加的稳定 - policy-based
 parser = argparse.ArgumentParser(description='PyTorch REINFORCE example')
 parser.add_argument('--gamma', type=float, default=0.99, metavar='G',
                     help='discount factor (default: 0.99)')
@@ -52,10 +52,10 @@ eps = np.finfo(np.float32).eps.item()
 
 def select_action(state):
     state = torch.from_numpy(state).float().unsqueeze(0)
-    probs = policy(state)
+    probs = policy(state)# stochastic policy
     m = Categorical(probs)
-    action = m.sample()
-    policy.saved_log_probs.append(m.log_prob(action))
+    action = m.sample()#对其采样就会得到action
+    policy.saved_log_probs.append(m.log_prob(action))#保留log likelihood的function所以会存起来
     return action.item()
 
 
@@ -63,11 +63,11 @@ def finish_episode():
     R = 0
     policy_loss = []
     returns = []
-    for r in policy.rewards[::-1]:
+    for r in policy.rewards[::-1]:#反算，每一步实际的return
         R = r + args.gamma * R
         returns.insert(0, R)
     returns = torch.tensor(returns)
-    returns = (returns - returns.mean()) / (returns.std() + eps)
+    returns = (returns - returns.mean()) / (returns.std() + eps)#normalization
     for log_prob, R in zip(policy.saved_log_probs, returns):
         policy_loss.append(-log_prob * R)
     optimizer.zero_grad()
